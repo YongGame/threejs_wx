@@ -19296,7 +19296,7 @@ function WebGLShader( gl, type, string ) {
 
 	const shader = gl.createShader( type );
 
-	console.log(string);
+  console.log(string)
 	gl.shaderSource( shader, string );
 	gl.compileShader( shader );
 
