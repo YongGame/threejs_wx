@@ -64,53 +64,56 @@ export default class Main {
 		console.log(formats.s3tc); // PC
 		console.log(formats.pvrtc); // IOS
 		
+
+		const texture = new THREE.CompressedTexture();
+		const geometry = new THREE.BoxGeometry( 1, 1, 1 );
+		let material1 = new THREE.MeshBasicMaterial( {
+			map: texture
+		} );
+		material1.map.colorSpace = THREE.SRGBColorSpace;
+		const mesh = new THREE.Mesh( geometry, material1 );
+		mesh.position.z = 2;
+		scene.add(mesh);
+		
+		if(formats.s3tc){
+			console.log("pc")
+			this.loadKtx('http://127.0.0.1:5501/images/compressed/disturb_BC1.ktx', texture); // pc的地址和安卓不同 。web服务使用vscode的Go Live 搭建。
+		}
+		if(formats.etc1){
+			console.log("安卓")
+			this.loadKtx('http://192.168.240.132:5501/images/compressed/disturb_ETC1.ktx', texture); // 安卓
+		}
+			
+	}
+
+	loadKtx(url, texture){
 		// threejs 自带的 KTXLoader -> FileLoader 无法正确加载，这里自定义加载方式
 		// 1. 创建一个 new XMLHttpRequest 对象
 		let xhr = new XMLHttpRequest();
 		xhr.responseType = "arraybuffer";
+		xhr.open('GET', url);
 		// 2. 配置它：从 URL /article/.../load GET-request
-		if(formats.s3tc){
-			console.log("pc")
-			xhr.open('GET', 'http://127.0.0.1:5501/images/compressed/disturb_BC1.ktx'); // pc的地址和安卓不同 。web服务使用vscode的Go Live 搭建。
-		}
-		if(formats.etc1){
-			console.log("安卓")
-			xhr.open('GET', 'http://192.168.240.132:5501/images/compressed/disturb_ETC1.ktx'); // 安卓
-		}
-			
-
 		// 4. 当接收到响应后，将调用此函数
 		xhr.onload = function() {
-		if (xhr.status != 200) { // 分析响应的 HTTP 状态
-			console.log(`Error`,xhr.status); // 例如 404: Not Found
-		} else { // 显示结果
-			console.log(`Done`); // response 是服务器响应
-
-			console.log(xhr.response);
-			const loader = new KTXLoader();
-			let texDatas = loader.parse(xhr.response, true); // true 生成 mipmap
-			console.log(texDatas);
-
-			const texture = new THREE.CompressedTexture();
-			texture.image.width = texDatas.width;
-			texture.image.height = texDatas.height;
-			texture.mipmaps = texDatas.mipmaps;
-			if ( texDatas.mipmapCount === 1 ) texture.minFilter = LinearFilter;
-			texture.format = texDatas.format;
-			texture.needsUpdate = true;
-
-			const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-			let material1, material2;
-			material1 = new THREE.MeshBasicMaterial( {
-				map: texture
-			} );
-			material1.map.colorSpace = THREE.SRGBColorSpace;
-			const mesh = new THREE.Mesh( geometry, material1 );
-			mesh.position.z = 2;
-			scene.add(mesh);
-		}
+			if (xhr.status != 200) { // 分析响应的 HTTP 状态
+				console.log(`Error`,xhr.status); // 例如 404: Not Found
+			} else { // 显示结果
+				console.log(`Done`); // response 是服务器响应
+	
+				console.log(xhr.response);
+				const loader = new KTXLoader();
+				let texDatas = loader.parse(xhr.response, true); // true 生成 mipmap
+				console.log(texDatas);
+	
+				
+				texture.image.width = texDatas.width;
+				texture.image.height = texDatas.height;
+				texture.mipmaps = texDatas.mipmaps;
+				if ( texDatas.mipmapCount === 1 ) texture.minFilter = LinearFilter;
+				texture.format = texDatas.format;
+				texture.needsUpdate = true;
+			}
 		};
-
 		xhr.onerror = function() {
 			console.log("Request failed",xhr.status);
 		};
