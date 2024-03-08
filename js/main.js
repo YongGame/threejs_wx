@@ -11,6 +11,8 @@ let cube
 let texture
 let aa
 
+let formats
+
 // ... 其它变量／常量 ...
 
 /**
@@ -28,6 +30,19 @@ export default class Main {
 		renderer = new THREE.WebGLRenderer({ context: ctx })
 		renderer.setSize(window.innerWidth, window.innerHeight);
 		document.body.appendChild(renderer.domElement);
+
+		formats = {
+			astc: renderer.extensions.has('WEBGL_compressed_texture_astc'),
+			etc1: renderer.extensions.has('WEBGL_compressed_texture_etc1'),
+			etc2: renderer.extensions.has('WEBGL_compressed_texture_etc'),
+			s3tc: renderer.extensions.has('WEBGL_compressed_texture_s3tc'), // pc
+			pvrtc: renderer.extensions.has('WEBGL_compressed_texture_pvrtc') // ios
+		};
+		console.log(formats.astc); // 安卓
+		console.log(formats.etc1); // 安卓
+		console.log(formats.etc2); // 安卓
+		console.log(formats.s3tc); // PC
+		console.log(formats.pvrtc); // IOS
 
 		//... 其它代码块 ...
 		texture = new THREE.TextureLoader().load("images/bg.jpg");
@@ -50,19 +65,6 @@ export default class Main {
 
 	testCompressTex() {
 		// https://threejs.org/examples/webgl_loader_texture_ktx.html
-
-		const formats = {
-			astc: renderer.extensions.has('WEBGL_compressed_texture_astc'),
-			etc1: renderer.extensions.has('WEBGL_compressed_texture_etc1'),
-			etc2: renderer.extensions.has('WEBGL_compressed_texture_etc'),
-			s3tc: renderer.extensions.has('WEBGL_compressed_texture_s3tc'),
-			pvrtc: renderer.extensions.has('WEBGL_compressed_texture_pvrtc')
-		};
-		console.log(formats.astc); // 安卓
-		console.log(formats.etc1); // 安卓
-		console.log(formats.etc2); // 安卓
-		console.log(formats.s3tc); // PC
-		console.log(formats.pvrtc); // IOS
 		
 
 		const texture = new THREE.CompressedTexture();
@@ -81,7 +83,11 @@ export default class Main {
 		}
 		if(formats.etc1){
 			console.log("安卓")
-			this.loadKtx('http://192.168.240.132:5501/images/compressed/disturb_ETC1.ktx', texture); // 安卓
+			//this.loadKtx('http://192.168.240.132:5501/images/compressed/disturb_ETC1.ktx', texture); // 安卓
+		}
+		if(formats.astc){
+			console.log("安卓")
+			this.loadKtx('http://192.168.240.132:5501/images/compressed/lensflare_ASTC8x8.ktx', texture); // 安卓
 		}
 			
 	}
@@ -109,7 +115,7 @@ export default class Main {
 				texture.image.width = texDatas.width;
 				texture.image.height = texDatas.height;
 				texture.mipmaps = texDatas.mipmaps;
-				if ( texDatas.mipmapCount === 1 ) texture.minFilter = LinearFilter;
+				if ( texDatas.mipmapCount === 1 ) texture.minFilter = THREE.LinearFilter;
 				texture.format = texDatas.format;
 				texture.needsUpdate = true;
 			}
@@ -168,22 +174,31 @@ export default class Main {
                 diff.rgb *= aa.r;
                 
                 //if(aa.r < 0.1) diff.rgb = vec3(1.0,0.0,0.0);
-                outColor = vec4(diff.rgb,1.0);
+                outColor = diff;
 
             }
         `;
-
-		//aa = new THREE.TextureLoader().load( "images/a2.png", this.onLoaded );
-		aa = new THREE.TextureLoader().load("images/a2.png");
-		aa.wrapS = THREE.RepeatWrapping;
-		aa.wrapT = THREE.RepeatWrapping;
+		
+		
+		let bg;
+		let a;
+		if(formats.etc1){
+			bg = new THREE.CompressedTexture();
+			a = new THREE.CompressedTexture();
+			this.loadKtx('http://192.168.240.132:5501/images/compressed/bg.KTX', bg); // 安卓
+			this.loadKtx('http://192.168.240.132:5501/images/compressed/a2.KTX', a); // 安卓
+		}
+		if(formats.s3tc){
+			bg = new THREE.TextureLoader().load( "images/bg.jpg");
+			a = new THREE.TextureLoader().load("images/a2.png");
+		}
 
 		const rawMaterial = new THREE.RawShaderMaterial({
 			glslVersion: THREE.GLSL3,
 			name: 'haha',
 			uniforms: {
-				map: { value: texture },
-				aaa: { value: aa }
+				map: { value: bg },
+				aaa: { value: a }
 			},
 			vertexShader: vertexShader,
 			fragmentShader: fragmentShader,
