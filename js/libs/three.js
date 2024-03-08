@@ -19296,7 +19296,7 @@ function WebGLShader( gl, type, string ) {
 
 	const shader = gl.createShader( type );
 
-  console.log(string)
+  //console.log(string)
 	gl.shaderSource( shader, string );
 	gl.compileShader( shader );
 
@@ -24113,10 +24113,13 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 	function getInternalFormat( internalFormatName, glFormat, glType, colorSpace, forceLinearTransfer = false ) {
 
+    console.log("11111")
 		if ( isWebGL2 === false ) return glFormat;
+    console.log("22222")
 
+    console.warn(internalFormatName)
+    console.warn(glFormat)
 		if ( internalFormatName !== null ) {
-
 			if ( _gl[ internalFormatName ] !== undefined ) return _gl[ internalFormatName ];
 
 			console.warn( 'THREE.WebGLRenderer: Attempt to use non-existing WebGL internal format \'' + internalFormatName + '\'' );
@@ -24126,7 +24129,6 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 		let internalFormat = glFormat;
 
 		if ( glFormat === _gl.RED ) {
-
 			if ( glType === _gl.FLOAT ) internalFormat = _gl.R32F;
 			if ( glType === _gl.HALF_FLOAT ) internalFormat = _gl.R16F;
 			if ( glType === _gl.UNSIGNED_BYTE ) internalFormat = _gl.R8;
@@ -24134,7 +24136,6 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 		}
 
 		if ( glFormat === _gl.RED_INTEGER ) {
-
 			if ( glType === _gl.UNSIGNED_BYTE ) internalFormat = _gl.R8UI;
 			if ( glType === _gl.UNSIGNED_SHORT ) internalFormat = _gl.R16UI;
 			if ( glType === _gl.UNSIGNED_INT ) internalFormat = _gl.R32UI;
@@ -24173,6 +24174,8 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 			if ( glType === _gl.UNSIGNED_SHORT_4_4_4_4 ) internalFormat = _gl.RGBA4;
 			if ( glType === _gl.UNSIGNED_SHORT_5_5_5_1 ) internalFormat = _gl.RGB5_A1;
 
+      console.warn(glType)
+      console.warn(internalFormat)
 		}
 
 		if ( internalFormat === _gl.R16F || internalFormat === _gl.R32F ||
@@ -24746,6 +24749,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 			const dataReady = source.dataReady;
 			const levels = getMipLevels( texture, image, supportsMips );
 
+			console.warn("useTexStorage:", useTexStorage)
 			if ( texture.isDepthTexture ) {
 
 				// populate depth texture with dummy data
@@ -25082,7 +25086,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 				}
 
 			} else {
-
+				
 				// regular Texture (image, video, canvas)
 
 				// use manually created mipmaps if available
@@ -25122,11 +25126,10 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 					texture.generateMipmaps = false;
 
 				} else {
-
 					if ( useTexStorage ) {
+						console.warn("pppppppp2",glInternalFormat,glFormat)
 
 						if ( allocateMemory ) {
-
 							const dimensions = getDimensions( image );
 
 							state.texStorage2D( _gl.TEXTURE_2D, levels, glInternalFormat, dimensions.width, dimensions.height );
@@ -25134,13 +25137,11 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 						}
 
 						if ( dataReady ) {
-
 							state.texSubImage2D( _gl.TEXTURE_2D, 0, 0, 0, glFormat, glType, image );
 
 						}
 
 					} else {
-
 						state.texImage2D( _gl.TEXTURE_2D, 0, glInternalFormat, glFormat, glType, image );
 
 					}
@@ -43552,7 +43553,6 @@ class LoadingManager {
 			itemsTotal ++;
 
 			if ( isLoading === false ) {
-
 				if ( scope.onStart !== undefined ) {
 
 					scope.onStart( url, itemsLoaded, itemsTotal );
@@ -44481,6 +44481,8 @@ class TextureLoader extends Loader {
 
 		loader.load( url, function ( image ) {
 
+			console.log("load texture")
+			console.log(image)
 			texture.image = image;
 			texture.needsUpdate = true;
 
