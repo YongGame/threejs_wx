@@ -457,7 +457,7 @@
 	      if (node instanceof Node) {
 	        this.childNodes.push(node)
 	      } else {
-	        throw new TypeError('Failed to executed \'appendChild\' on \'Node\': parameter 1 is not of type \'Node\'.')
+	        //throw new TypeError('Failed to executed \'appendChild\' on \'Node\': parameter 1 is not of type \'Node\'.')
 	      }
 	    }
 	  }, {
@@ -677,6 +677,9 @@
 	    }
 
 	    return new _HTMLElement2.default(tagName)
+	  },
+	  createTextNode: function createTextNode(tagName){
+
 	  },
 	  createElementNS: function createElementNS(nameSpace, tagName) {
 		return this.createElement(tagName)

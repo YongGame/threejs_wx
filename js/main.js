@@ -1,9 +1,23 @@
 import * as THREE from 'libs/three.js'
 import { KTXLoader } from 'KTXLoader.js';
+import * as SPECTOR from 'libs/spector.js'
 
 let ctx = canvas.getContext('webgl2') // {premultipliedAlpha:false, alpha:false}
 console.log(ctx)
 
+let spector = new SPECTOR.Spector();
+  spector.onCapture.add((capture) => {
+  // Do something with capture.
+  console.log(JSON.stringify(capture));
+});
+
+
+  setTimeout(function () {
+  //  需要执行的代码
+  console.log('定时器执行了')
+  spector.captureCanvas(canvas);
+  }, 3000); // 2000为毫秒级参数，表示2秒
+    
 let scene
 let camera
 let renderer
@@ -174,7 +188,7 @@ export default class Main {
                 diff.rgb *= aa.r;
                 
                 //if(aa.r < 0.1) diff.rgb = vec3(1.0,0.0,0.0);
-                outColor = diff;
+                outColor = aa;
 
             }
         `;

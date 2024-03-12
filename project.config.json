@@ -4,13 +4,14 @@
     "urlCheck": false,
     "es6": true,
     "postcss": true,
-    "minified": true,
+    "minified": false,
     "newFeature": true,
     "babelSetting": {
       "ignore": [],
       "disablePlugins": [],
       "outputPath": ""
-    }
+    },
+    "enhance": true
   },
   "compileType": "game",
   "libVersion": "2.20.1",

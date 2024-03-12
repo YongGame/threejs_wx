@@ -24113,12 +24113,8 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 	function getInternalFormat( internalFormatName, glFormat, glType, colorSpace, forceLinearTransfer = false ) {
 
-    console.log("11111")
 		if ( isWebGL2 === false ) return glFormat;
-    console.log("22222")
 
-    console.warn(internalFormatName)
-    console.warn(glFormat)
 		if ( internalFormatName !== null ) {
 			if ( _gl[ internalFormatName ] !== undefined ) return _gl[ internalFormatName ];
 
@@ -24174,8 +24170,6 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 			if ( glType === _gl.UNSIGNED_SHORT_4_4_4_4 ) internalFormat = _gl.RGBA4;
 			if ( glType === _gl.UNSIGNED_SHORT_5_5_5_1 ) internalFormat = _gl.RGB5_A1;
 
-      console.warn(glType)
-      console.warn(internalFormat)
 		}
 
 		if ( internalFormat === _gl.R16F || internalFormat === _gl.R32F ||
@@ -24749,7 +24743,6 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 			const dataReady = source.dataReady;
 			const levels = getMipLevels( texture, image, supportsMips );
 
-			console.warn("useTexStorage:", useTexStorage)
 			if ( texture.isDepthTexture ) {
 
 				// populate depth texture with dummy data
@@ -25127,7 +25120,6 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 				} else {
 					if ( useTexStorage ) {
-						console.warn("pppppppp2",glInternalFormat,glFormat)
 
 						if ( allocateMemory ) {
 							const dimensions = getDimensions( image );
@@ -44481,8 +44473,6 @@ class TextureLoader extends Loader {
 
 		loader.load( url, function ( image ) {
 
-			console.log("load texture")
-			console.log(image)
 			texture.image = image;
 			texture.needsUpdate = true;
 
