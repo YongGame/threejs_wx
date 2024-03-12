@@ -2,8 +2,8 @@ import * as THREE from 'libs/three.js'
 import { KTXLoader } from 'KTXLoader.js';
 import * as SPECTOR from 'libs/spector.js'
 
-let ctx = canvas.getContext('webgl2') // {premultipliedAlpha:false, alpha:false}
-console.log(ctx)
+let gl = canvas.getContext('webgl2') // {premultipliedAlpha:false, alpha:false}
+console.log(gl)
 
 let spector = new SPECTOR.Spector();
   spector.onCapture.add((capture) => {
@@ -15,7 +15,7 @@ let spector = new SPECTOR.Spector();
   setTimeout(function () {
   //  需要执行的代码
   console.log('定时器执行了')
-  spector.captureCanvas(canvas);
+  //spector.captureCanvas(canvas);
   }, 3000); // 2000为毫秒级参数，表示2秒
     
 let scene
@@ -41,7 +41,7 @@ export default class Main {
 		// 初始化
 		scene = new THREE.Scene()
 		camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-		renderer = new THREE.WebGLRenderer({ context: ctx })
+		renderer = new THREE.WebGLRenderer({ context: gl })
 		renderer.setSize(window.innerWidth, window.innerHeight);
 		document.body.appendChild(renderer.domElement);
 
@@ -57,6 +57,43 @@ export default class Main {
 		console.log(formats.etc2); // 安卓
 		console.log(formats.s3tc); // PC
 		console.log(formats.pvrtc); // IOS
+
+
+		// instantiate a loader
+		const loader = new THREE.TextureLoader();
+		// load a resource
+		loader.load(
+			// resource URL
+			'images/a4.png',
+			// onLoad callback
+			function ( texture ) {
+				var canvas = document.createElement('canvas');
+				var context = canvas.getContext('2d');
+				context.drawImage(texture.image, 0, 0, 512, 512);
+				console.log(context.getImageData(0, 160, 5, 5).data);
+				
+				// 读取加载的图像的像素值
+				// 先将 img 绘制到帧缓冲，然后使用 readPixels 进行读取
+				gl.activeTexture(gl.TEXTURE0);
+				let t = gl.createTexture();
+				gl.bindTexture(gl.TEXTURE_2D, t);
+				const framebuffer = gl.createFramebuffer();
+				gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, texture.image); 
+				//gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+				let data = new Uint8Array(5 * 5 * 4);
+				gl.readPixels(0, 160, 5, 5, gl.RGBA, gl.UNSIGNED_BYTE, data);
+				console.log(data)
+			},
+			// onProgress callback currently not supported
+			undefined,
+			// onError callback
+			function ( err ) {
+				console.error( 'An error happened.' );
+			}
+		);
+
 
 		//... 其它代码块 ...
 		texture = new THREE.TextureLoader().load("images/bg.jpg");
