@@ -15762,8 +15762,8 @@ function WebGLCapabilities( gl, extensions, parameters ) {
 	}
 
 	console.log("22222222222")
-	const isWebGL2 = true;
-	//const isWebGL2 = typeof WebGL2RenderingContext !== 'undefined' && gl.constructor.name === 'WebGL2RenderingContext';
+	//const isWebGL2 = true;
+	const isWebGL2 = typeof WebGL2RenderingContext !== 'undefined' && gl.constructor.name === 'WebGL2RenderingContext';
 
 	let precision = parameters.precision !== undefined ? parameters.precision : 'highp';
 	const maxPrecision = getMaxPrecision( precision );

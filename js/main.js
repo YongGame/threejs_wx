@@ -2,36 +2,24 @@ import * as THREE from 'libs/three.js'
 import { KTXLoader } from 'KTXLoader.js';
 import * as SPECTOR from 'libs/spector.js'
 
-let gl = canvas.getContext('webgl2') // {premultipliedAlpha:false, alpha:false}
+let gl = canvas.getContext('webgl', {alpha: false})
 console.log(gl)
 
 let spector = new SPECTOR.Spector();
   spector.onCapture.add((capture) => {
-  // Do something with capture.
   console.log(JSON.stringify(capture));
 });
-
-
-  setTimeout(function () {
-  //  需要执行的代码
+setTimeout(function () {
   console.log('定时器执行了')
   //spector.captureCanvas(canvas);
-  }, 3000); // 2000为毫秒级参数，表示2秒
+  }, 3000); 
     
 let scene
 let camera
 let renderer
 let cube
-let texture
-let aa
-
 let formats
 
-// ... 其它变量／常量 ...
-
-/**
- * 游戏主函数
- */
 export default class Main {
 	constructor() {
 		this.start()
@@ -49,57 +37,17 @@ export default class Main {
 			astc: renderer.extensions.has('WEBGL_compressed_texture_astc'),
 			etc1: renderer.extensions.has('WEBGL_compressed_texture_etc1'),
 			etc2: renderer.extensions.has('WEBGL_compressed_texture_etc'),
-			s3tc: renderer.extensions.has('WEBGL_compressed_texture_s3tc'), // pc
-			pvrtc: renderer.extensions.has('WEBGL_compressed_texture_pvrtc') // ios
+			s3tc: renderer.extensions.has('WEBGL_compressed_texture_s3tc'), 
+			pvrtc: renderer.extensions.has('WEBGL_compressed_texture_pvrtc') 
 		};
-		console.log(formats.astc); // 安卓
-		console.log(formats.etc1); // 安卓
-		console.log(formats.etc2); // 安卓
-		console.log(formats.s3tc); // PC
-		console.log(formats.pvrtc); // IOS
+		console.log("astc", formats.astc); // 安卓
+		console.log("etc1", formats.etc1); // 安卓
+		console.log("etc2", formats.etc2); // 安卓
+		console.log("pvrtc", formats.pvrtc); // IOS
+		console.log("s3tc", formats.s3tc); // PC
 
 
-		// instantiate a loader
-		const loader = new THREE.TextureLoader();
-		// load a resource
-		loader.load(
-			// resource URL
-			'images/a4.png',
-			// onLoad callback
-			function ( texture ) {
-				var canvas = document.createElement('canvas');
-				var context = canvas.getContext('2d');
-				context.drawImage(texture.image, 0, 0, 512, 512);
-				console.log(context.getImageData(0, 160, 5, 5).data);
-				
-				// 读取加载的图像的像素值
-				// 先将 img 绘制到帧缓冲，然后使用 readPixels 进行读取
-				gl.activeTexture(gl.TEXTURE0);
-				let t = gl.createTexture();
-				gl.bindTexture(gl.TEXTURE_2D, t);
-				const framebuffer = gl.createFramebuffer();
-				gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
-				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, texture.image); 
-				//gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
-				let data = new Uint8Array(5 * 5 * 4);
-				gl.readPixels(0, 160, 5, 5, gl.RGBA, gl.UNSIGNED_BYTE, data);
-				console.log(data)
-			},
-			// onProgress callback currently not supported
-			undefined,
-			// onError callback
-			function ( err ) {
-				console.error( 'An error happened.' );
-			}
-		);
-
-
-		//... 其它代码块 ...
-		texture = new THREE.TextureLoader().load("images/bg.jpg");
-		texture.wrapS = THREE.RepeatWrapping;
-		texture.wrapT = THREE.RepeatWrapping;
-		console.log(texture)
+		
 
 		this.createBox1();
 		this.createBox2();
@@ -180,6 +128,12 @@ export default class Main {
 	}
 
 	createBox2() {
+		// 纹理加载
+		let texture = new THREE.TextureLoader().load("images/bg.jpg");
+		texture.wrapS = THREE.RepeatWrapping;
+		texture.wrapT = THREE.RepeatWrapping;
+		console.log(texture)
+
 		const geometry = new THREE.BoxGeometry(1, 1, 1);
 		//const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
 		const material = new THREE.MeshBasicMaterial({ map: texture });
@@ -196,10 +150,10 @@ export default class Main {
             uniform mat4 modelViewMatrix; // optional
             uniform mat4 projectionMatrix; // optional
 
-            in vec3 position;
-            in vec2 uv;
+            attribute vec3 position;
+            attribute vec2 uv;
 
-            out vec2 uv2;
+            varying vec2 uv2;
 
             void main()	{
                 gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
@@ -210,26 +164,23 @@ export default class Main {
 		let fragmentShader = `
             precision mediump float;
             precision mediump int;
-            out vec4 outColor;
             
             uniform sampler2D map;
             uniform sampler2D aaa;
 
-            in vec2 uv2;
+            varying vec2 uv2;
 
             void main()	{
                 
-              vec4 aa = texture( aaa, uv2 );
-                vec4 diff = texture( map, uv2 );
+              vec4 aa = texture2D( aaa, uv2 );
+                vec4 diff = texture2D( map, uv2 );
                 
                 diff.rgb *= aa.r;
                 
-                //if(aa.r < 0.1) diff.rgb = vec3(1.0,0.0,0.0);
-                outColor = aa;
+                gl_FragColor = diff;
 
             }
         `;
-		
 		
 		let bg;
 		let a;
@@ -245,7 +196,7 @@ export default class Main {
 		}
 
 		const rawMaterial = new THREE.RawShaderMaterial({
-			glslVersion: THREE.GLSL3,
+			//glslVersion: THREE.GLSL3,
 			name: 'haha',
 			uniforms: {
 				map: { value: bg },
@@ -262,30 +213,42 @@ export default class Main {
 		scene.add(cube);
 	}
 
+	// 测试加载的图像像素值
 	onLoaded(tex) {
-
-		// 读取加载的图像的像素值
-		// 先将 img 绘制到帧缓冲，然后使用 readPixels 进行读取
-		let gl = ctx;
-		gl.activeTexture(gl.TEXTURE0);
-		let texture = gl.createTexture();
-		gl.bindTexture(gl.TEXTURE_2D, texture);
-		const framebuffer = gl.createFramebuffer();
-		gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, aa.image);
-		gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
-		let data = new Uint8Array(5 * 5 * 4);
-		gl.readPixels(0, 0, 5, 5, gl.RGBA, gl.UNSIGNED_BYTE, data);
-		console.log(data)
-
-		// 读取图像的像素值
-		/*
-		var canvas = document.createElement('canvas');
-			  var context = canvas.getContext('2d');
-			  context.drawImage(tex.image, 0, 0, 512, 512);
-		console.log(context.getImageData(0, 0, 5, 5).data);
-		*/
+		// instantiate a loader
+		const loader = new THREE.TextureLoader();
+		// load a resource
+		loader.load(
+			// resource URL
+			'images/a4.png',
+			// onLoad callback
+			function ( texture ) {
+				var canvas = document.createElement('canvas');
+				var context = canvas.getContext('2d');
+				context.drawImage(texture.image, 0, 0, 512, 512);
+				console.log(context.getImageData(0, 160, 5, 5).data);
+				
+				// 读取加载的图像的像素值
+				// 先将 img 绘制到帧缓冲，然后使用 readPixels 进行读取
+				gl.activeTexture(gl.TEXTURE0);
+				let t = gl.createTexture();
+				gl.bindTexture(gl.TEXTURE_2D, t);
+				const framebuffer = gl.createFramebuffer();
+				gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, texture.image); 
+				//gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+				let data = new Uint8Array(5 * 5 * 4);
+				gl.readPixels(0, 160, 5, 5, gl.RGBA, gl.UNSIGNED_BYTE, data);
+				console.log(data)
+			},
+			// onProgress callback currently not supported
+			undefined,
+			// onError callback
+			function ( err ) {
+				console.error( 'An error happened.' );
+			}
+		);
 	}
 
 	createLine() {
