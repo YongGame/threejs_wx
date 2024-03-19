@@ -28,6 +28,7 @@ export default class Main {
 	start() {
 		// 初始化
 		scene = new THREE.Scene()
+		scene.background = new THREE.Color( 0x550000 );
 		camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 		renderer = new THREE.WebGLRenderer({ context: gl })
 		renderer.setSize(window.innerWidth, window.innerHeight);
@@ -40,19 +41,20 @@ export default class Main {
 			s3tc: renderer.extensions.has('WEBGL_compressed_texture_s3tc'), 
 			pvrtc: renderer.extensions.has('WEBGL_compressed_texture_pvrtc') 
 		};
-		console.log("astc", formats.astc); // 安卓
+		
+		console.log("astc", formats.astc); // 安卓 IOS
 		console.log("etc1", formats.etc1); // 安卓
 		console.log("etc2", formats.etc2); // 安卓
 		console.log("pvrtc", formats.pvrtc); // IOS
 		console.log("s3tc", formats.s3tc); // PC
-
+		
 
 		
 
 		this.createBox1();
-		this.createBox2();
+		//this.createBox2();
 
-		this.testCompressTex();
+		//this.testCompressTex();
 		this.createLine();
 		camera.position.x = 3;
 		camera.position.y = 3;
@@ -61,7 +63,7 @@ export default class Main {
 		// 开始循环
 		this.loop()
 	}
-
+	
 	testCompressTex() {
 		// https://threejs.org/examples/webgl_loader_texture_ktx.html
 		
@@ -78,20 +80,25 @@ export default class Main {
 		
 		if(formats.s3tc){
 			console.log("pc")
-			this.loadKtx('http://127.0.0.1:5501/images/compressed/disturb_BC1.ktx', texture); // pc的地址和安卓不同 。web服务使用vscode的Go Live 搭建。
+			this.loadKtx('disturb_BC1.ktx', texture); // pc的地址和安卓不同 。web服务使用vscode的Go Live 搭建。
 		}
 		if(formats.etc1){
 			console.log("安卓")
-			//this.loadKtx('http://192.168.240.132:5501/images/compressed/disturb_ETC1.ktx', texture); // 安卓
+			//this.loadKtx('disturb_ETC1.ktx', texture); // 安卓
 		}
 		if(formats.astc){
 			console.log("安卓")
-			this.loadKtx('http://192.168.240.132:5501/images/compressed/lensflare_ASTC8x8.ktx', texture); // 安卓
+			this.loadKtx('astc/lensflare_ASTC8x8.ktx', texture); // 安卓
 		}
 			
 	}
 
-	loadKtx(url, texture){
+	loadKtx(res, texture){
+
+		let ip = "127.0.0.1";
+		if(!formats.s3tc) ip = "192.168.240.132"
+		let url = 'http://' + ip + ':5502/images_compress/' + res;
+
 		// threejs 自带的 KTXLoader -> FileLoader 无法正确加载，这里自定义加载方式
 		// 1. 创建一个 new XMLHttpRequest 对象
 		let xhr = new XMLHttpRequest();
@@ -116,7 +123,9 @@ export default class Main {
 				texture.mipmaps = texDatas.mipmaps;
 				if ( texDatas.mipmapCount === 1 ) texture.minFilter = THREE.LinearFilter;
 				texture.format = texDatas.format;
-				texture.needsUpdate = true;
+        texture.needsUpdate = true;
+        
+        console.log(texture);
 			}
 		};
 		xhr.onerror = function() {
@@ -166,41 +175,40 @@ export default class Main {
             precision mediump int;
             
             uniform sampler2D map;
-            uniform sampler2D aaa;
 
             varying vec2 uv2;
 
             void main()	{
-                
-              vec4 aa = texture2D( aaa, uv2 );
                 vec4 diff = texture2D( map, uv2 );
-                
-                diff.rgb *= aa.r;
-                
                 gl_FragColor = diff;
 
             }
         `;
 		
 		let bg;
-		let a;
-		if(formats.etc1){
+		if(formats.astc){
+      		bg = new THREE.CompressedTexture();
+			console.log("astc")
+			this.loadKtx('astc/enemy.ktx', bg); 
+		}
+		else if(formats.etc1){
+			console.log("etc1")
 			bg = new THREE.CompressedTexture();
 			a = new THREE.CompressedTexture();
-			this.loadKtx('http://192.168.240.132:5501/images/compressed/bg.KTX', bg); // 安卓
-			this.loadKtx('http://192.168.240.132:5501/images/compressed/a2.KTX', a); // 安卓
+			this.loadKtx('bg.KTX', bg); 
 		}
-		if(formats.s3tc){
-			bg = new THREE.TextureLoader().load( "images/bg.jpg");
-			a = new THREE.TextureLoader().load("images/a2.png");
+		else if(formats.s3tc){
+      console.log("pc")
+      bg = new THREE.CompressedTexture();
+      this.loadKtx('dxt/leaf_dxt5.ktx', bg); 
+			//bg = new THREE.TextureLoader().load( "images/enemy.png");
 		}
 
 		const rawMaterial = new THREE.RawShaderMaterial({
 			//glslVersion: THREE.GLSL3,
 			name: 'haha',
 			uniforms: {
-				map: { value: bg },
-				aaa: { value: a }
+				map: { value: bg }
 			},
 			vertexShader: vertexShader,
 			fragmentShader: fragmentShader,
