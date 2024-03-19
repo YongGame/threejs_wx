@@ -1,18 +1,8 @@
 import * as THREE from 'libs/three.js'
 import { KTXLoader } from 'KTXLoader.js';
-import * as SPECTOR from 'libs/spector.js'
 
 let gl = canvas.getContext('webgl', {alpha: false})
 console.log(gl)
-
-let spector = new SPECTOR.Spector();
-  spector.onCapture.add((capture) => {
-  console.log(JSON.stringify(capture));
-});
-setTimeout(function () {
-  console.log('定时器执行了')
-  //spector.captureCanvas(canvas);
-  }, 3000); 
     
 let scene
 let camera
@@ -56,9 +46,9 @@ export default class Main {
 
 		//this.testCompressTex();
 		this.createLine();
-		camera.position.x = 3;
-		camera.position.y = 3;
-		camera.position.z = 3;
+		camera.position.x = 1.5;
+		camera.position.y = 1.5;
+		camera.position.z = 1.5;
 		camera.lookAt(new THREE.Vector3(0, 0, 0))
 		// 开始循环
 		this.loop()
@@ -84,7 +74,7 @@ export default class Main {
 		}
 		if(formats.etc1){
 			console.log("安卓")
-			//this.loadKtx('disturb_ETC1.ktx', texture); // 安卓
+			this.loadKtx('disturb_ETC1.ktx', texture); // 安卓
 		}
 		if(formats.astc){
 			console.log("安卓")
@@ -119,10 +109,10 @@ export default class Main {
 	
 				
 				texture.image.width = texDatas.width;
-				texture.image.height = texDatas.height;
+        texture.image.height = texDatas.height;
 				texture.mipmaps = texDatas.mipmaps;
 				if ( texDatas.mipmapCount === 1 ) texture.minFilter = THREE.LinearFilter;
-				texture.format = texDatas.format;
+        texture.format = texDatas.format;
         texture.needsUpdate = true;
         
         console.log(texture);
@@ -179,30 +169,44 @@ export default class Main {
             varying vec2 uv2;
 
             void main()	{
-                vec4 diff = texture2D( map, uv2 );
+                vec4 diff = texture2D( map, vec2(uv2.x, 1.0-uv2.y) );
                 gl_FragColor = diff;
 
             }
         `;
 		
-		let bg;
-		if(formats.astc){
-      		bg = new THREE.CompressedTexture();
-			console.log("astc")
-			this.loadKtx('astc/enemy.ktx', bg); 
+		
+		let file_tc = "";
+		if(formats.s3tc) file_tc = "DXT1";
+		else if(formats.astc) file_tc = "ASTC";
+		else if(formats.pvrtc) file_tc = "PVRTC";
+		else if(formats.etc2) file_tc = "ETC2";
+		else if(formats.etc1) file_tc = "ETC1";
+		if(file_tc != "") file_tc = 'images/'+file_tc + ".ktx";
+		else file_tc = 'images/JPG.jpg';
+		console.log(file_tc);
+
+		var fs = wx.getFileSystemManager()
+		let textureBinary;
+		try {
+			textureBinary = fs.readFileSync(file_tc)
+		} catch(e) {
+			console.error(e)
 		}
-		else if(formats.etc1){
-			console.log("etc1")
-			bg = new THREE.CompressedTexture();
-			a = new THREE.CompressedTexture();
-			this.loadKtx('bg.KTX', bg); 
-		}
-		else if(formats.s3tc){
-      console.log("pc")
-      bg = new THREE.CompressedTexture();
-      this.loadKtx('dxt/leaf_dxt5.ktx', bg); 
-			//bg = new THREE.TextureLoader().load( "images/enemy.png");
-		}
+
+		let bg = new THREE.CompressedTexture();
+		const loader = new KTXLoader();
+		let texDatas = loader.parse(textureBinary, false); // true 生成 mipmap
+		console.log(texDatas);
+		bg.image.width = texDatas.width;
+		bg.image.height = texDatas.height;
+		bg.mipmaps = texDatas.mipmaps;
+		if ( texDatas.mipmapCount === 1 ) bg.minFilter = THREE.LinearFilter;
+		bg.format = texDatas.format;
+        bg.needsUpdate = true;
+
+		//let bg = new THREE.TextureLoader().load( "images/bg.jpg");
+		
 
 		const rawMaterial = new THREE.RawShaderMaterial({
 			//glslVersion: THREE.GLSL3,

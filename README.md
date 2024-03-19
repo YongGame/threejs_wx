@@ -27,3 +27,23 @@
 微信在 getContext时，传入的 alpha  premultipliedAlpha 都是无效的。。。
 
 微信在安卓平台，如果图像a通道像素为0，那么对应的rgb=0。 在 ios平台貌似 =1 。  压缩纹理不存在问题。
+
+
+try {
+  fs.accessSync('./images/bg.jpg')
+} catch(e) {
+  console.error(e)
+}
+const fd = fs.openSync({
+  filePath: './images/bg.jpg',
+  flag: 'r'
+})
+console.log(fd)
+
+const ab = new ArrayBuffer(1024)
+const res = fs.readSync({
+  fd: fd,
+  arrayBuffer: ab,
+  length: 10
+})
+console.log(res)
