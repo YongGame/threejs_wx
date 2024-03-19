@@ -1,0 +1,36 @@
+var shell = require('shelljs')
+const fs = require('fs');
+
+const inDir = 'D:/wx/threejs_wx/images/';
+const outDir = 'D:/wx/threejs_wx/images/';
+const files = fs.readdirSync(inDir);
+
+const PVRT_format = 'PVRTCI_4BPP_RGB';
+const PVRT_quality = 'pvrtcfastest';
+
+const ETC1_format = 'ASTC_6X6';
+const ETC1_quality = 'astcmedium';
+
+/*
+for(let file of files){
+    console.log(file);
+    let inFile = inDir + file;
+    let outFile = outDir + file;
+    outFile = outFile.replace('.png', '.ktx');
+    outFile = outFile.replace('.jpg', '.ktx');
+
+    shell.exec('PVRTexToolCLI -i '+ inFile +' -o '+ outFile +' -f '+ ETC1_format +' -q '+ ETC1_quality + ' -ics lRGB');
+}
+*/
+
+const path = 'D:/wx/threejs_wx/images/'
+// https://docs.imgtec.com/tools-manuals/pvrtextool-manual/html/topics/cli/command-line-options.html
+shell.exec('PVRTexToolCLI -i '+ path + 'ETC1.jpg' +' -o '+ path + 'ETC1.ktx' +' -f '+ 'ETC1' +' -q '+ 'etcslow' + ' -ics lRGB');
+shell.exec('PVRTexToolCLI -i '+ path + 'ETC2.jpg' +' -o '+ path + 'ETC2.ktx' +' -f '+ 'ETC2_RGB' +' -q '+ 'etcslow' + ' -ics lRGB');
+shell.exec('PVRTexToolCLI -i '+ path + 'PVRTC.jpg' +' -o '+ path + 'PVRTC.ktx' +' -f '+ 'PVRTCI_4BPP_RGB' +' -q '+ 'pvrtcbest' + ' -ics lRGB');
+shell.exec('PVRTexToolCLI -i '+ path + 'ASTC.jpg' +' -o '+ path + 'ASTC.ktx' +' -f '+ 'ASTC_6X6' +' -q '+ 'astcexhaustive' + ' -ics lRGB');
+
+// PVRTexToolCLI 不支持 DXT1 DXT5 
+// https://compressonator.readthedocs.io/en/latest/command_line_tool/commandline.html
+shell.exec('compressonatorcli -fd DXT1 '+ path + 'DXT1.jpg '+ path + 'DXT1.ktx');
+shell.exec('compressonatorcli -fd DXT5 '+ path + 'DXT5.jpg '+ path + 'DXT5.ktx');
